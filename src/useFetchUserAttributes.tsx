@@ -124,8 +124,7 @@ export const FetchTester = () => {
     console.log("No error message?")
     const attributes = Object.keys(data).map((key, i) => (
               <p key={i}>
-                <span>Key Name: {key}</span>
-                <span>Value: {data[key]}</span>
+                <span>{key}: {data[key]}</span>
               </p>
     ))
         
