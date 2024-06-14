@@ -45,7 +45,7 @@ function App() {
       </div>
       <button onClick={signOut}>Sign Out</button>
       <div>
-       {/* <FetchTester /> */}
+       <FetchTester />
        Fetch Tester Goes Here
       </div>
       
