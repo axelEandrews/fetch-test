@@ -5,6 +5,7 @@ import { Authenticator, Divider, Flex, Heading } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 import { TestApp } from "./FullTester";
 import { TestAppTwo } from "./FullTesterTwo";
+import { TestAppThree } from "./FullTesterThree";
 
 const client = generateClient<Schema>();
 
@@ -43,7 +44,7 @@ function App() {
                 borderBlockStyle: "groove",
               }}
             />
-            <TestAppTwo />
+            <TestAppThree />
             {/* <Flex fontWeight="bold" color="white" direction="row">
       <Divider size="small" orientation="vertical" style={{borderLeft:"10px solid navy", borderBlockStyle:"dotted"}}/>
         <DeleteTester />

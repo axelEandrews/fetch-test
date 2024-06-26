@@ -8,11 +8,12 @@ import {
   Label,
 } from "@aws-amplify/ui-react";
 import React from "react";
-import { useUserAttributes } from "./useUserAttributes";
+import { useUserAttributes } from "./useUserAttributesThree";
 import { UserAttributeKey } from "aws-amplify/auth";
+import { useFetchUserAttributes } from "./useFetchUserAttributes";
 
-export const TestAppTwo = () => {
-  const [fetchState, handleFetch] = useUserAttributes("fetch");
+export const TestAppThree = () => {
+  const [fetchState, handleFetch] = useFetchUserAttributes();
   const [deleteState, handleDelete] = useUserAttributes("delete");
   const [updateState, handleUpdate] = useUserAttributes("update");
   const [verifyState, handleVerify] = useUserAttributes("confirm");
@@ -44,10 +45,10 @@ export const TestAppTwo = () => {
 
   const handleUpdateSubmit = async () => {
     await handleUpdate({ userAttributes: updatedAttributes });
-    setUpdatedAttributes((prevState) => {
-      const { email, phone_number } = prevState;
-      return { email, phone_number };
-    });
+    //   setUpdatedAttributes((prevState) => {
+    //     const { email, phone_number } = prevState;
+    //     return { email, phone_number };
+    //   });
   };
 
   const handleEmailVerify = () => {

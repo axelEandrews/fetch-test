@@ -1,4 +1,4 @@
-import { ConfirmUserAttributeInput, DeleteUserAttributesInput, SendUserAttributeVerificationCodeInput, UpdateUserAttributesInput, confirmUserAttribute, deleteUserAttributes, fetchUserAttributes, sendUserAttributeVerificationCode, updateUserAttributes } from "aws-amplify/auth";
+import { confirmUserAttribute, deleteUserAttributes, fetchUserAttributes, sendUserAttributeVerificationCode, updateUserAttributes } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import { useState, useCallback, useEffect } from 'react';
 import { DefaultAttributes, UserAttributes } from "./constants";
@@ -9,7 +9,7 @@ interface ActionState<T> {
   /**
    * action data
    */
-  data: ReturnType<T>;
+  data: T;
   /**
    * indicates whether action is running
    */
@@ -20,7 +20,7 @@ interface ActionState<T> {
   message: string | undefined;
 }
 
-const actions = {
+const actions: Actions = {
   fetch: fetchUserAttributes,
   delete: deleteUserAttributes,
   update: updateUserAttributes,
@@ -42,8 +42,8 @@ const useUserAttributes = <T extends keyof Actions>(
   state: ActionState<Awaited<Actions[T]>>,
   handleAction: (input: Parameters<Actions[T]>) => void,
 ] => {
-    const [state, setState] = useState<ActionState<Awaited<Actions[T]>>>({
-        data: {} as Awaited<ReturnType<Actions[T]>>,
+    const [state, setState] = useState<ActionState<T>>({
+        data: {} as T,
         isLoading: false,
         message: undefined,
       });
