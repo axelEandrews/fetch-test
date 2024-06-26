@@ -14,21 +14,30 @@ export const auth = defineAuth({
       mutable: true,
       required: false,
     },
-    address: {
+    phoneNumber: {
       mutable: true,
-      required: false,
+      required: true
     },
-    timezone: {
+    familyName: {
       mutable: true,
-      required: false,
-    },
-    gender: {
-      mutable: true,
-      required: false,
+      required: false
     },
     fullname: {
       mutable: true,
       required: false
+    },
+    preferredUsername: {
+      mutable: true,
+      required: false
+    },
+    nickname: {
+      mutable: true,
+      required: false
+    },
+    middleName: {
+      mutable: true,
+      required: false
     }
-  },
-});
+    }
+  }
+);

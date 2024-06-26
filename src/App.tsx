@@ -1,55 +1,51 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { FetchTester } from "./useFetchUserAttributes";
-import { Authenticator } from '@aws-amplify/ui-react'
+import { Authenticator, Divider, Flex, Heading } from '@aws-amplify/ui-react'
 import '@aws-amplify/ui-react/styles.css'
+import { TestApp } from "./FullTester";
+import { TestAppTwo } from "./FullTesterTwo";
 
 
 const client = generateClient<Schema>();
 
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
+  const [, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
 
   useEffect(() => {
     client.models.Todo.observeQuery().subscribe({
       next: (data) => setTodos([...data.items]),
     });
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
-    
-  function deleteTodo(id: string) {
-    client.models.Todo.delete({ id })
-  }
+  }, [])
 
   return (
-    <Authenticator>
+    <Authenticator signUpAttributes={["birthdate","family_name","preferred_username","nickname","middle_name","phone_number"]}>
       {({ signOut, user }) => (
+        <Flex>
     <main>
-      <h1>{user?.signInDetails?.loginId}'s todos</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li onClick={() => deleteTodo(todo.id)} key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
+      <Heading fontSize={60}>Welcome to Attribute Manager!!</Heading>
+      <Heading paddingBottom="small">
+      <h2>{user?.signInDetails?.loginId}'s Attributes:</h2>
       <button onClick={signOut}>Sign Out</button>
-      <div>
-       <FetchTester />
-       Fetch Tester Goes Here
-      </div>
+      </Heading>
+      <Divider size="large" style={{borderBottom:"10px solid navy", borderBlockStyle: "groove"}} />
+      <TestApp />
+      {/* <Flex fontWeight="bold" color="white" direction="row">
+      <Divider size="small" orientation="vertical" style={{borderLeft:"10px solid navy", borderBlockStyle:"dotted"}}/>
+        <DeleteTester />
+        <Divider size="small" orientation="vertical" style={{borderLeft:"10px solid navy", borderBlockStyle:"dotted"}}/>
+        <div>
+      <UpdateTester />
       
-    </main> )}
+      </div>
+      <Divider size="small" orientation="vertical" style={{borderLeft:"10px solid navy", borderBlockStyle:"dotted"}}/>
+      <div><Heading>User Attributes: </Heading><FetchTester /></div>
+      <Divider size="small" orientation="vertical" style={{borderLeft:"10px solid navy", borderBlockStyle:"dotted"}}/>
+      </Flex>
+      <Divider size="large" style={{borderTop:"10px solid navy", borderBlockStyle: "groove"}} /> */}
+    </main> 
+    </Flex>)}
+
     </Authenticator>
   );
 }
