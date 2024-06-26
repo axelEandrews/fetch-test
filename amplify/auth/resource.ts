@@ -1,4 +1,4 @@
-import { defineAuth } from '@aws-amplify/backend';
+import { defineAuth } from "@aws-amplify/backend";
 
 /**
  * Define and configure your auth resource
@@ -7,7 +7,7 @@ import { defineAuth } from '@aws-amplify/backend';
 export const auth = defineAuth({
   loginWith: {
     email: true,
-  },  
+  },
   userAttributes: {
     // specify a "birthdate" attribute
     birthdate: {
@@ -16,28 +16,27 @@ export const auth = defineAuth({
     },
     phoneNumber: {
       mutable: true,
-      required: true
+      required: true,
     },
     familyName: {
       mutable: true,
-      required: false
+      required: false,
     },
     fullname: {
       mutable: true,
-      required: false
+      required: false,
     },
     preferredUsername: {
       mutable: true,
-      required: false
+      required: false,
     },
     nickname: {
       mutable: true,
-      required: false
+      required: false,
     },
     middleName: {
       mutable: true,
-      required: false
-    }
-    }
-  }
-);
+      required: false,
+    },
+  },
+});

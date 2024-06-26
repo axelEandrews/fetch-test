@@ -1,10 +1,11 @@
-import { ConfirmUserAttributeInput, confirmUserAttribute } from "aws-amplify/auth";
+import {
+  ConfirmUserAttributeInput,
+  confirmUserAttribute,
+} from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import React from "react";
 
-
 // LOOK AT BELOW WHEN MAKING EXAMPLE APP V2 - will need for creating inputs
-
 
 // function isEmail(userAttributeKey: UserAttributeKey): userAttributeKey is VerifiableUserAttributeKey {
 //     return userAttributeKey === 'email';
@@ -38,7 +39,7 @@ import React from "react";
 //                                 console.log(error);
 //                             }
 //                         }
-                    
+
 //                 }
 //             }
 //         }
@@ -46,28 +47,27 @@ import React from "react";
 //     return output;
 // }
 
-
 type HandleVerifyUserAttribute = (input: ConfirmUserAttributeInput) => void;
 
 export const useVerifyUserAttribute = (): [
-    handleVerifyUserAttributes: HandleVerifyUserAttribute
-] => { 
-
-const handleVerify  = React.useCallback(async (toVerify: ConfirmUserAttributeInput) => {
-    try {
-        await confirmUserAttribute(toVerify)
-        Hub.dispatch('ui', {
-        event: 'attributeVerified',
-        message: "attribute successfully verified"
-        })
-    } catch (e) {
+  handleVerifyUserAttributes: HandleVerifyUserAttribute
+] => {
+  const handleVerify = React.useCallback(
+    async (toVerify: ConfirmUserAttributeInput) => {
+      try {
+        await confirmUserAttribute(toVerify);
+        Hub.dispatch("ui", {
+          event: "attributeVerified",
+          message: "attribute successfully verified",
+        });
+      } catch (e) {
         const error = e as Error;
-        console.log(error)
-    }
-},[])
+        console.log(error);
+      }
+    },
+    []
+  );
 
-return [handleVerify]
-}
+  return [handleVerify];
+};
 // logic for parsing UpdateUserAttributesOutput into ConfirmUserAttributeInput
-
-        

@@ -9,7 +9,7 @@ interface ActionState<T> {
   /**
    * action data
    */
-  data: T;
+  data: ReturnType<T>;
   /**
    * indicates whether action is running
    */
@@ -19,8 +19,6 @@ interface ActionState<T> {
    */
   message: string | undefined;
 }
-
-type ActionKey = 'fetch' | 'delete' | 'update' | 'confirm' | 'sendVerificationCode';
 
 const actions = {
   fetch: fetchUserAttributes,
@@ -38,14 +36,14 @@ interface Actions {
     update: typeof updateUserAttributes;
 }
 
-const useUserAttributes = <T extends ActionKey>(
+const useUserAttributes = <T extends keyof Actions>(
   type: T
 ): [
   state: ActionState<Awaited<Actions[T]>>,
-  handleAction: (...input: Parameters<Actions[T]>) => void,
+  handleAction: (input: Parameters<Actions[T]>) => void,
 ] => {
     const [state, setState] = useState<ActionState<Awaited<Actions[T]>>>({
-        data: {} as T,
+        data: {} as Awaited<ReturnType<Actions[T]>>,
         isLoading: false,
         message: undefined,
       });
@@ -54,7 +52,7 @@ const useUserAttributes = <T extends ActionKey>(
 
   const handleAction = useCallback(
 
-    async (input: Parameters<typeof actions[T]>[0]) => {
+    async (input: Parameters<Actions[T]>[0]) => {
       try {
         setState((prevState) => ({ ...prevState, isLoading: true }));
 
@@ -70,7 +68,7 @@ const useUserAttributes = <T extends ActionKey>(
             }
             case 'delete': {
                 const data = await actions['delete'](input);
-                setState({data: data, isLoading: false, message: undefined})
+                setState({data: void, isLoading: false, message: undefined})
                 Hub.dispatch('ui', {
                     event: 'attributesChanged',
                     message: "attributes deleted successfully"

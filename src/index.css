@@ -65,33 +65,33 @@ a {
   text-decoration: none;
 }
 text {
-  color:rgb(255, 255, 255);
+  color: rgb(255, 255, 255);
   font-weight: bold;
 }
 form {
-  color:rgb(255, 255, 255);
-  font-weight:bold;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
 }
 input {
-  color:rgb(255, 255, 255);
+  color: rgb(255, 255, 255);
   font-weight: bold;
 }
 label {
-  color:rgb(255, 255, 255);
+  color: rgb(255, 255, 255);
   font-weight: bold;
 }
 Label {
-  color:rgb(255, 254, 254);
+  color: rgb(255, 254, 254);
   font-weight: bold;
 }
 .amplify-label {
-  color: rgb(255, 255, 255)
+  color: rgb(255, 255, 255);
 }
 .amplify-input {
-  color: rgb(255, 255, 255)
+  color: rgb(255, 255, 255);
 }
 .amplify-button {
-  color:#ffffff;
+  color: #ffffff;
   background-color: blue;
 }
 .amplify-heading {
