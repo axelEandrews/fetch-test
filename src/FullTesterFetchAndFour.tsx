@@ -10,15 +10,14 @@ import {
 import React from "react";
 import { useUserAttributes } from "./useUserAttributes";
 import { UserAttributeKey } from "aws-amplify/auth";
+import { useFetchUserAttributes } from "./useFetchUserAttributes";
 
-export const TestAppTwo = () => {
-  const [fetchState, handleFetch] = useUserAttributes("fetch");
-  const [deleteState, handleDelete] = useUserAttributes("delete");
-  const [updateState, handleUpdate] = useUserAttributes("update");
-  const [verifyState, handleVerify] = useUserAttributes("confirm");
-  const [sendCodeState, handleSendConfirmation] = useUserAttributes(
-    "sendVerificationCode"
-  );
+export const TestAppThree = () => {
+  const [fetchState, handleFetch] = useFetchUserAttributes();
+  const [, handleDelete] = useUserAttributes("delete");
+  const [, handleUpdate] = useUserAttributes("update");
+  const [, handleVerify] = useUserAttributes("confirm");
+  const [, handleSendConfirmation] = useUserAttributes("sendVerificationCode");
 
   const [attributesToDelete, setAttributesToDelete] = React.useState<string[]>(
     []
@@ -33,6 +32,13 @@ export const TestAppTwo = () => {
   const [isEmailVerified, setIsEmailVerified] = React.useState(false);
   const [isPhoneVerified, setIsPhoneVerified] = React.useState(false);
 
+  const [emailToVerify, setEmailToVerify] = React.useState<string | undefined>(
+    undefined
+  );
+  const [phoneToVerify, setPhoneToVerify] = React.useState<string | undefined>(
+    undefined
+  );
+
   const handleDeleteSubmit = () => {
     handleDelete({
       userAttributeKeys: attributesToDelete as [
@@ -40,14 +46,22 @@ export const TestAppTwo = () => {
         ...UserAttributeKey[]
       ],
     });
+    setAttributesToDelete([]);
   };
 
   const handleUpdateSubmit = async () => {
     await handleUpdate({ userAttributes: updatedAttributes });
-    setUpdatedAttributes((prevState) => {
-      const { email, phone_number } = prevState;
-      return { email, phone_number };
-    });
+    //   setUpdatedAttributes((prevState) => {
+    //     const { email, phone_number } = prevState;
+    //     return { email, phone_number };
+    //   });
+    if (updatedAttributes.email) {
+      setEmailToVerify(updatedAttributes.email);
+    }
+    if (updatedAttributes.phone_number) {
+      setPhoneToVerify(updatedAttributes.phone_number);
+    }
+    setUpdatedAttributes({});
   };
 
   const handleEmailVerify = () => {
@@ -57,6 +71,7 @@ export const TestAppTwo = () => {
     });
     setEmailVerificationCode("");
     setIsEmailVerified(true);
+    setEmailToVerify(undefined);
     setUpdatedAttributes((prevState) => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { email, ...rest } = prevState;
@@ -140,10 +155,10 @@ export const TestAppTwo = () => {
           />
           <Button onClick={handleEmailVerify}>Verify</Button>
           <Button onClick={handleResendEmailConfirmation}>Resend Code</Button>
-          {!isEmailVerified && updateState.data?.email && (
+          {!isEmailVerified && emailToVerify && (
             <Label>
-              Please check your email at {updatedAttributes.email} for the
-              confirmation code.
+              Please check your email at {emailToVerify} for the confirmation
+              code.
             </Label>
           )}
         </Flex>
@@ -158,10 +173,10 @@ export const TestAppTwo = () => {
           />
           <Button onClick={handlePhoneVerify}>Verify</Button>
           <Button onClick={handleResendPhoneConfirmation}>Resend Code</Button>
-          {!isPhoneVerified && updateState.data?.phone_number && (
+          {!isPhoneVerified && phoneToVerify && (
             <Label>
-              Please check your phone at {updatedAttributes.phone_number} for
-              the confirmation code.
+              Please check your phone at {phoneToVerify} for the confirmation
+              code.
             </Label>
           )}
         </Flex>

@@ -49,6 +49,7 @@ export const useFetchUserAttributes = (): [
       const error = e as Error;
       setResults({ ...results, isLoading: true, message: error.message });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // PLEASE FIX THIS SOMEHOW
 
   const fetchHub: HubCallback = React.useCallback(
@@ -80,6 +81,7 @@ export const useFetchUserAttributes = (): [
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [] // FIX THIS TOO
   );
   // Hub subscriptions

@@ -1,9 +1,15 @@
-import { confirmUserAttribute, deleteUserAttributes, fetchUserAttributes, sendUserAttributeVerificationCode, updateUserAttributes } from "aws-amplify/auth";
+import {
+  ConfirmUserAttributeInput,
+  DeleteUserAttributesInput,
+  SendUserAttributeVerificationCodeInput,
+  UpdateUserAttributesInput,
+  confirmUserAttribute,
+  deleteUserAttributes,
+  sendUserAttributeVerificationCode,
+  updateUserAttributes,
+} from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
-import { useState, useCallback, useEffect } from 'react';
-import { DefaultAttributes, UserAttributes } from "./constants";
-import React from "react";
-import { HubCallback } from '@aws-amplify/core';
+import { useState, useCallback } from "react";
 
 interface ActionState<T> {
   /**
@@ -21,92 +27,139 @@ interface ActionState<T> {
 }
 
 const actions: Actions = {
-  fetch: fetchUserAttributes,
   delete: deleteUserAttributes,
   update: updateUserAttributes,
   confirm: confirmUserAttribute,
   sendVerificationCode: sendUserAttributeVerificationCode,
-}
+};
 
 interface Actions {
-    confirm: typeof confirmUserAttribute;
-    delete: typeof deleteUserAttributes;
-    fetch: typeof fetchUserAttributes;
-    sendVerificationCode: typeof sendUserAttributeVerificationCode;
-    update: typeof updateUserAttributes;
+  confirm: typeof confirmUserAttribute;
+  delete: typeof deleteUserAttributes;
+  sendVerificationCode: typeof sendUserAttributeVerificationCode;
+  update: typeof updateUserAttributes;
 }
 
 const useUserAttributes = <T extends keyof Actions>(
   type: T
 ): [
   state: ActionState<Awaited<Actions[T]>>,
-  handleAction: (input: Parameters<Actions[T]>) => void,
+  handleAction: (input: Parameters<Actions[T]>[0]) => void
 ] => {
-    const [state, setState] = useState<ActionState<T>>({
-        data: {} as T,
-        isLoading: false,
-        message: undefined,
-      });
+  const [state, setState] = useState<ActionState<Awaited<Actions[T]>>>({
+    data: {} as Awaited<ReturnType<Actions[T]>>,
+    isLoading: false,
+    message: undefined,
+  });
 
-  //const [allAttributes, setAllAttributes] = useState<UserAttributes>(DefaultAttributes);
+  function isDeleteUserAttributesInput(
+    input: Parameters<Actions[T]>[0]
+  ): input is DeleteUserAttributesInput {
+    console.log(input);
+    return typeof input === "object" && input !== null;
+  }
+  function isUpdateUserAttributesInput(
+    input: Parameters<Actions[T]>[0]
+  ): input is UpdateUserAttributesInput {
+    console.log(input);
+    return (
+      typeof input === "object" && input !== null && "userAttributes" in input
+    );
+  }
+
+  function isConfirmUserAttributeInput(
+    input: Parameters<Actions[T]>[0]
+  ): input is ConfirmUserAttributeInput {
+    return (
+      typeof input === "object" &&
+      input !== null &&
+      "userAttributeKey" in input &&
+      "confirmationCode" in input
+    );
+  }
+  function isSendUserAttributeVerificationCodeInput(
+    input: Parameters<Actions[T]>[0]
+  ): input is SendUserAttributeVerificationCodeInput {
+    return (
+      typeof input === "object" && input !== null && "userAttributeKey" in input
+    );
+  }
 
   const handleAction = useCallback(
-
     async (input: Parameters<Actions[T]>[0]) => {
       try {
         setState((prevState) => ({ ...prevState, isLoading: true }));
 
-        const data = await actions[type](input);
+        const data = await (() => {
+          switch (type) {
+            case "delete":
+              if (!isDeleteUserAttributesInput(input)) {
+                throw new Error("Invalid input type for delete action");
+              }
+              return actions.delete(input);
+            case "update":
+              if (!isUpdateUserAttributesInput(input)) {
+                throw new Error("Invalid input type for update action");
+              }
+              return actions.update(input);
+            // Add similar type checks for other action types
+            case "confirm":
+              if (!isConfirmUserAttributeInput(input)) {
+                throw new Error("Invalid input type for confirm action");
+              }
+              return actions.confirm(input);
+            case "sendVerificationCode":
+              if (!isSendUserAttributeVerificationCodeInput(input)) {
+                throw new Error(
+                  "Invalid input type for sendVerificationCode action"
+                );
+              }
+              return actions.sendVerificationCode(input);
+            default:
+              throw new Error(`Unknown action type: ${type}`);
+          }
+        })();
 
-        switch(type) {
-            case 'fetch': {
-                const data = await actions['fetch']();
-                const completeAttributes: UserAttributes = {...DefaultAttributes, ...data}
-                setState({data: completeAttributes, isLoading: false, message: undefined})
-                Hub.dispatch('ui', { event: 'fetch', data: completeAttributes });
-                break;
-            }
-            case 'delete': {
-                const data = await actions['delete'](input);
-                setState({data: void, isLoading: false, message: undefined})
-                Hub.dispatch('ui', {
-                    event: 'attributesChanged',
-                    message: "attributes deleted successfully"
-                    })
-                break;
-            }
-            case 'update': {
-                const data = await actions['update'](input);
-                setState({
-                    data: data,
-                    isLoading: false,
-                    message: undefined,})
-                Hub.dispatch('ui', {
-                    event: 'attributesChanged',
-                    data: data,
-                    message: "attributes updated successfully"})
-                 break;
-            }
-            case 'confirm': {
-                setState({data: void, isLoading: false, message: undefined})
-                Hub.dispatch('ui', {
-                    event: 'attributeVerified',
-                    message: "attribute successfully verified",
-                    data: data
-                    })
-                break;
-            }
-            case 'sendVerificationCode': {
-                setState({data: void, isLoading: false, message: undefined})
-                Hub.dispatch('ui', {
-                    event: 'confirmationCodeSent',
-                    message: "send code to verify attribute"
-                })
-                break;
-            }
+        console.log(state);
+
+        setState({ data: data, isLoading: false, message: undefined });
+
+        switch (type) {
+          case "delete": {
+            Hub.dispatch("ui", {
+              event: "attributesChanged",
+              data: data,
+              message: "attributes deleted successfully",
+            });
+            break;
+          }
+          case "update": {
+            Hub.dispatch("ui", {
+              event: "attributesChanged",
+              data: data,
+              message: "attributes updated successfully",
+            });
+            break;
+          }
+          case "confirm": {
+            Hub.dispatch("ui", {
+              event: "attributeVerified",
+              message: "attribute successfully verified",
+              data: data,
+            });
+            break;
+          }
+          case "sendVerificationCode": {
+            Hub.dispatch("ui", {
+              event: "confirmationCodeSent",
+              data: data,
+              message: "send code to verify attribute",
+            });
+            break;
+          }
         }
-
       } catch (error) {
+        console.log(error);
         setState((prevState) => ({
           ...prevState,
           isLoading: false,
@@ -114,92 +167,10 @@ const useUserAttributes = <T extends keyof Actions>(
         }));
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [type]
   );
-
-//   useEffect(() => {
-//     if (type === 'fetch') {
-//       handleAction(undefined);
-//     }
-//   }, [handleAction, type]);
-
-//   useEffect(() => {
-//     const unsubscribe = Hub.listen('ui', ({ event, data }) => {
-//       if (event === 'fetch') {
-//         setAllAttributes(data);
-//       } else if (event === 'delete') {
-//         setAllAttributes((prevAttributes) => {
-//           const { [data]: _, ...rest } = prevAttributes;
-//           return rest;
-//         });
-//       } else if (event === 'update') {
-//         setAllAttributes((prevAttributes) => ({
-//           ...prevAttributes,
-//           ...data,
-//         }));
-//       }
-//     });
-
-//     return unsubscribe;
-//   }, []);
-  ///////////////
-  const fetchHub: HubCallback = React.useCallback(
-    ({ payload }) => {
-        switch (payload.event) {
-            // success events
-            case 'signedIn':
-            case 'signUp':
-            case 'autoSignIn': 
-            case 'tokenRefresh':
-            case 'attributesChanged':
-            case 'attributeVerified': {
-                handleAction();
-                break
-            }
-            case 'signedOut':
-            case 'tokenRefresh_failure':
-            case 'signIn_failure': 
-            case 'autoSignIn_failure': 
-            {
-                setState({data: DefaultAttributes, isLoading: false, message: "Signed Out"});
-                break;
-            }
-            default: {
-                break;
-            }
-        }
-    
-    }, [] // FIX THIS TOO
-    )
-    // Hub subscriptions
-    React.useEffect(() => {
-        const unsubscribe = Hub.listen('auth', fetchHub);
-        handleAction(undefined);
-        return unsubscribe
-    }, [fetchHub, handleAction])
-
-    React.useEffect(() => {
-        const unsubscribe = Hub.listen('ui', fetchHub);
-        handleAction(undefined);
-        return unsubscribe
-    }, [fetchHub, handleAction])
-
-
-
-  switch (type) {
-    case 'fetch':
-      return [state, handleAction]
-    case 'delete':
-      return [state, handleAction]
-    case 'update':
-      return [state, handleAction]
-    case 'confirm':
-      return [state, handleAction]
-    case 'sendVerificationCode':
-      return [state, handleAction]
-    default:
-      throw new Error(`Invalid action type: ${type}`);
-  }
+  return [state, handleAction];
 };
 
 export { useUserAttributes };
