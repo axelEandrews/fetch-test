@@ -1,4 +1,7 @@
-// import React from 'react';
+import React from "react";
+import { useUserAttributes } from "./useUserAttributes";
+import { UserAttributeKey } from "aws-amplify/auth";
+import { useFetchUserAttributes } from "./useFetchUserAttributes";
 import {
   Button,
   CheckboxField,
@@ -6,18 +9,17 @@ import {
   Heading,
   Input,
   Label,
+  Loader,
 } from "@aws-amplify/ui-react";
-import React from "react";
-import { useUserAttributes } from "./useUserAttributes";
-import { UserAttributeKey } from "aws-amplify/auth";
-import { useFetchUserAttributes } from "./useFetchUserAttributes";
 
 export const TestAppThree = () => {
   const [fetchState, handleFetch] = useFetchUserAttributes();
-  const [, handleDelete] = useUserAttributes("delete");
-  const [, handleUpdate] = useUserAttributes("update");
-  const [, handleVerify] = useUserAttributes("confirm");
-  const [, handleSendConfirmation] = useUserAttributes("sendVerificationCode");
+  const [deleteState, handleDelete] = useUserAttributes("delete");
+  const [updateState, handleUpdate] = useUserAttributes("update");
+  const [confirmState, handleConfirm] = useUserAttributes("confirm");
+  const [sendConfirmationState, handleSendConfirmation] = useUserAttributes(
+    "sendVerificationCode"
+  );
 
   const [attributesToDelete, setAttributesToDelete] = React.useState<string[]>(
     []
@@ -50,11 +52,7 @@ export const TestAppThree = () => {
   };
 
   const handleUpdateSubmit = async () => {
-    await handleUpdate({ userAttributes: updatedAttributes });
-    //   setUpdatedAttributes((prevState) => {
-    //     const { email, phone_number } = prevState;
-    //     return { email, phone_number };
-    //   });
+    handleUpdate({ userAttributes: updatedAttributes });
     if (updatedAttributes.email) {
       setEmailToVerify(updatedAttributes.email);
     }
@@ -65,7 +63,7 @@ export const TestAppThree = () => {
   };
 
   const handleEmailVerify = () => {
-    handleVerify({
+    handleConfirm({
       userAttributeKey: "email",
       confirmationCode: emailVerificationCode,
     });
@@ -80,7 +78,7 @@ export const TestAppThree = () => {
   };
 
   const handlePhoneVerify = () => {
-    handleVerify({
+    handleConfirm({
       userAttributeKey: "phone_number",
       confirmationCode: phoneVerificationCode,
     });
@@ -101,22 +99,26 @@ export const TestAppThree = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (fetchState.isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (fetchState.message) {
-    return <div>Error: {fetchState.message}</div>;
-  }
-
   return (
     <Flex direction="column" gap="medium">
+      {(fetchState.isLoading ||
+        deleteState.isLoading ||
+        updateState.isLoading ||
+        confirmState.isLoading ||
+        sendConfirmationState.isLoading) && (
+        <Flex alignContent="center">
+          <Loader />
+          <span>Loading...</span>
+        </Flex>
+      )}
       <Flex direction="column" gap="small">
-        <Heading>User Attributes</Heading>
+        <div>
+          <Heading>User Attributes</Heading>
+        </div>
         {Object.entries(fetchState.data || {}).map(([key, value]) => (
-          <Flex key={key} gap="small">
+          <Flex key={key} direction="row" alignItems="center" gap="small">
             <Label>{key}:</Label>
-            <Flex gap="small">
+            <Flex direction="row" alignItems="center" gap="small" grow={1}>
               <div>{value || "unspecified"}</div>
               <Input
                 value={updatedAttributes[key] || ""}
@@ -145,9 +147,10 @@ export const TestAppThree = () => {
           </Flex>
         ))}
       </Flex>
-
       <Flex direction="column" gap="small">
-        <Heading>Verify Email</Heading>
+        <div>
+          <Heading>Verify Email</Heading>
+        </div>
         <Flex gap="small">
           <Input
             value={emailVerificationCode}
@@ -165,7 +168,9 @@ export const TestAppThree = () => {
       </Flex>
 
       <Flex direction="column" gap="small">
-        <Heading>Verify Phone Number</Heading>
+        <div>
+          <Heading>Verify Phone Number</Heading>
+        </div>
         <Flex gap="small">
           <Input
             value={phoneVerificationCode}

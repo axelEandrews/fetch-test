@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
-import { Authenticator, Divider, Flex, Heading } from "@aws-amplify/ui-react";
+import { Authenticator, Divider, Heading } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
 //import { TestApp } from "./FullTesterIndivHooks";
 import { TestAppThree } from "./FullTesterFetchAndFour";
@@ -29,23 +29,23 @@ function App() {
       ]}
     >
       {({ signOut, user }) => (
-        <Flex>
-          <main>
+        <main>
+          <div>
             <Heading fontSize={60}>Welcome to Attribute Manager!!</Heading>
             <Heading paddingBottom="small">
               <h2>{user?.signInDetails?.loginId}'s Attributes:</h2>
               <button onClick={signOut}>Sign Out</button>
             </Heading>
-            <Divider
-              size="large"
-              style={{
-                borderBottom: "10px solid navy",
-                borderBlockStyle: "groove",
-              }}
-            />
-            <TestAppThree />
-          </main>
-        </Flex>
+          </div>
+          <Divider
+            size="large"
+            style={{
+              borderBottom: "10px solid navy",
+              borderBlockStyle: "groove",
+            }}
+          />
+          <TestAppThree />
+        </main>
       )}
     </Authenticator>
   );
