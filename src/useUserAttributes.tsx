@@ -60,13 +60,6 @@ type AttributeManagementInputs =
   | UpdateUserAttributesInput
   | null;
 
-type Inputs = 
-    | ((...input: DeleteUserAttributesInput[]) => void)
-    | ((...input: ConfirmUserAttributeInput[]) => void)
-    | ((...input: SendUserAttributeVerificationCodeInput[]) => void)
-    | ((...input: UpdateUserAttributesInput[]) => void)
-    | ((...input: null[]) => void)
-
 const deleteUserAttributesAction = async (
   _prev: Awaited<ReturnType<typeof deleteUserAttributes>>,
   input: DeleteUserAttributesInput
@@ -195,7 +188,7 @@ function isDeleteUserAttributesInput(
   input: AttributeManagementInputs
 ): input is DeleteUserAttributesInput {
   return (
-    typeof input === "object" && input !== null && "userAttributesKeys" in input
+    typeof input === "object" && input !== null
   );
 }
 function isUpdateUserAttributesInput(
@@ -223,6 +216,12 @@ function isSendUserAttributeVerificationCodeInput(
     typeof input === "object" && input !== null && "userAttributeKey" in input
   );
 }
+
+// function isFetchUserAttributesInput(
+//   input: AttributeManagementInputs
+// ): input is null {
+//   return input === null;
+// }
 
 type ActionReturnTypes = {
   delete:
@@ -252,11 +251,19 @@ type ActionReturnTypes = {
     | UpdateUserAttributesOutput;
 };
 
+type ActionInputTypes = {
+  delete: DeleteUserAttributesInput;
+  confirm: ConfirmUserAttributeInput;
+  sendVerificationCode: SendUserAttributeVerificationCodeInput;
+  update: UpdateUserAttributesInput;
+  fetch: null;
+};
+
 const useUserAttributes = <T extends keyof Actions>(
   action: T
 ): [
   state: ActionState<ActionReturnTypes[T]>,
-  handleAction: Inputs
+  handleAction: (...input: ActionInputTypes[T][]) => void
 ] => {
   const [deleteState, handleDelete] = useDataState(
     deleteUserAttributesAction,

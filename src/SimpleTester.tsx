@@ -57,6 +57,7 @@ export const SimpleProfilePage = () => {
     handleDelete({
       userAttributeKeys: [key],
     });
+    console.log(key + 'deleted')
     const input = formRef.current?.querySelector(
       `input[name="${key}"]`
     ) as HTMLInputElement;
