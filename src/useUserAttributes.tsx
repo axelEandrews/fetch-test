@@ -1,54 +1,34 @@
+/*
+ *  This version of useUserAttributes is functional, but there are several type errors relating to the handleActions. Also, the handleActions are hardcoded.
+ */
+
 import {
-  ConfirmUserAttributeInput,
-  DeleteUserAttributesInput,
-  SendUserAttributeVerificationCodeInput,
-  UpdateUserAttributesInput,
   confirmUserAttribute,
+  ConfirmUserAttributeInput,
   deleteUserAttributes,
+  DeleteUserAttributesInput,
+  fetchUserAttributes,
+  FetchUserAttributesOutput,
   sendUserAttributeVerificationCode,
+  SendUserAttributeVerificationCodeInput,
+  SendUserAttributeVerificationCodeOutput,
   updateUserAttributes,
-} from "aws-amplify/auth";
-import { Hub } from "aws-amplify/utils";
-import { useState, useCallback } from "react";
+  UpdateUserAttributesInput,
+  UpdateUserAttributesOutput,
+} from "@aws-amplify/auth";
+
+import { Hub, HubCallback } from "@aws-amplify/core";
+
 import { useDataState } from "./useDataState";
+import {
+  DefaultAttributes,
+  defaultSendUserAttributeVerificationCodeOutput,
+  defaultUpdateUserAttributesOutput,
+} from "./constants";
+import React from "react";
 
-const deleteUserAttributesAction = async (
-  _prev: Awaited<ReturnType<typeof deleteUserAttributes>>,
-  input: DeleteUserAttributesInput
-) => {
-  const result = await deleteUserAttributes(input);
-
-  return result;
-};
-
-const updateUserAttributesAction = async (
-  _prev: Awaited<ReturnType<typeof updateUserAttributes>>,
-  input: UpdateUserAttributesInput
-) => {
-  const result = await updateUserAttributes(input);
-
-  return result;
-};
-
-const confirmUserAttributeAction = async (
-  _prev: Awaited<ReturnType<typeof confirmUserAttribute>>,
-  input: ConfirmUserAttributeInput
-) => {
-  const result = await confirmUserAttribute(input);
-
-  return result;
-};
-
-const sendUserAttributeVerificationCodeAction = async (
-  _prev: Awaited<ReturnType<typeof sendUserAttributeVerificationCode>>,
-  input: SendUserAttributeVerificationCodeInput
-) => {
-  const result = await sendUserAttributeVerificationCode(input);
-
-  return result;
-};
-
-//const useSomeHook = () => useDataState(deleteUserAttributesAction, undefined)
+const INVALID_INPUT_TO_HANDLE_ACTION =
+  "This instance of handleAction requires input of type: ";
 
 interface ActionState<T> {
   /**
@@ -65,188 +45,294 @@ interface ActionState<T> {
   message: string | undefined;
 }
 
-const actions: Actions = {
-  delete: deleteUserAttributes,
-  update: updateUserAttributes,
-  confirm: confirmUserAttribute,
-  sendVerificationCode: sendUserAttributeVerificationCode,
-};
-
-const handleActions: HandleActions = {
-  delete: deleteUserAttributesAction,
-  update: updateUserAttributesAction,
-  confirm: confirmUserAttributeAction,
-  sendVerificationCode: sendUserAttributeVerificationCodeAction,
-};
-
-interface HandleActions {
+interface Actions {
   confirm: typeof confirmUserAttributeAction;
   delete: typeof deleteUserAttributesAction;
   sendVerificationCode: typeof sendUserAttributeVerificationCodeAction;
   update: typeof updateUserAttributesAction;
+  fetch: typeof fetchUserAttributesAction;
 }
 
-interface Actions {
-  confirm: typeof confirmUserAttribute;
-  delete: typeof deleteUserAttributes;
-  sendVerificationCode: typeof sendUserAttributeVerificationCode;
-  update: typeof updateUserAttributes;
+type AttributeManagementInputs =
+  | ConfirmUserAttributeInput
+  | DeleteUserAttributesInput
+  | SendUserAttributeVerificationCodeInput
+  | UpdateUserAttributesInput
+  | null;
+
+type Inputs = 
+    | ((...input: DeleteUserAttributesInput[]) => void)
+    | ((...input: ConfirmUserAttributeInput[]) => void)
+    | ((...input: SendUserAttributeVerificationCodeInput[]) => void)
+    | ((...input: UpdateUserAttributesInput[]) => void)
+    | ((...input: null[]) => void)
+
+const deleteUserAttributesAction = async (
+  _prev: Awaited<ReturnType<typeof deleteUserAttributes>>,
+  input: DeleteUserAttributesInput
+) => {
+  if (!isDeleteUserAttributesInput(input)) {
+    throw new Error(
+      INVALID_INPUT_TO_HANDLE_ACTION + "DeleteUserAttributesInput"
+    );
+  } else {
+    try {
+      const result = await deleteUserAttributes(input);
+      Hub.dispatch("ui", {
+        event: "attributesChanged",
+        message: "attributes deleted successfully",
+      });
+      return result;
+    } catch (error) {
+      Hub.dispatch("ui", {
+        event: "attributesUpdateFailure",
+        message: error as string,
+      });
+    }
+  }
+};
+
+const updateUserAttributesAction = async (
+  _prev: Awaited<ReturnType<typeof updateUserAttributes>>,
+  input: UpdateUserAttributesInput
+): Promise<UpdateUserAttributesOutput> => {
+  if (!isUpdateUserAttributesInput(input)) {
+    throw new Error(
+      INVALID_INPUT_TO_HANDLE_ACTION + "UpdateUserAttributesInput"
+    );
+  } else {
+    try {
+      const result = await updateUserAttributes(input);
+      Hub.dispatch("ui", {
+        event: "attributesChanged",
+        message: "attributes updated successfully",
+      });
+      return result;
+    } catch (error) {
+      Hub.dispatch("ui", {
+        event: "attributesUpdateFailure",
+        message: error as string,
+      });
+      throw error; // Throw the error instead of returning undefined
+    }
+  }
+};
+const confirmUserAttributeAction = async (
+  _prev: Awaited<ReturnType<typeof confirmUserAttribute>>,
+  input: ConfirmUserAttributeInput
+): Promise<void> => {
+  if (!isConfirmUserAttributeInput(input)) {
+    throw new Error(
+      INVALID_INPUT_TO_HANDLE_ACTION + "ConfirmUserAttributeInput"
+    );
+  } else {
+    try {
+      const result = await confirmUserAttribute(input);
+      Hub.dispatch("ui", {
+        event: "attributesChanged",
+        message: "attributes confirmed successfully",
+      });
+      return result;
+    } catch (error) {
+      Hub.dispatch("ui", {
+        event: "attributesUpdateFailure",
+        message: error as string,
+      });
+    }
+  }
+};
+
+const sendUserAttributeVerificationCodeAction = async (
+  _prev: Awaited<ReturnType<typeof sendUserAttributeVerificationCode>>,
+  input: SendUserAttributeVerificationCodeInput
+): Promise<SendUserAttributeVerificationCodeOutput> => {
+  if (!isSendUserAttributeVerificationCodeInput(input)) {
+    throw new Error(
+      INVALID_INPUT_TO_HANDLE_ACTION + "SendUserAttributeVerificationCodeInput"
+    );
+  } else {
+    try {
+      const result = await sendUserAttributeVerificationCode(input);
+      Hub.dispatch("ui", {
+        event: "attributesChanged",
+        message: "attributes confirmed successfully",
+      });
+      return result;
+    } catch (error) {
+      Hub.dispatch("ui", {
+        event: "attributesUpdateFailure",
+        message: error as string,
+      });
+      throw error;
+    }
+  }
+};
+
+const fetchUserAttributesAction = async (
+  _prev: Awaited<ReturnType<typeof fetchUserAttributes>>,
+  input: null
+): Promise<FetchUserAttributesOutput> => {
+  // if (!isFetchUserAttributesInput(input)) {
+  //     throw new Error(
+  //         INVALID_INPUT_TO_HANDLE_ACTION + "FetchUserAttributesInput"
+  //     );
+  // } else {
+  console.log(input);
+  try {
+    const result = await fetchUserAttributes();
+    return result;
+  } catch (error) {
+    Hub.dispatch("ui", {
+      event: "attributesUpdateFailure",
+      message: error as string,
+    });
+    throw error;
+    // }
+  }
+};
+
+function isDeleteUserAttributesInput(
+  input: AttributeManagementInputs
+): input is DeleteUserAttributesInput {
+  return (
+    typeof input === "object" && input !== null && "userAttributesKeys" in input
+  );
+}
+function isUpdateUserAttributesInput(
+  input: AttributeManagementInputs
+): input is UpdateUserAttributesInput {
+  return (
+    typeof input === "object" && input !== null && "userAttributes" in input
+  );
 }
 
-export const INVALID_INPUT_TO_HANDLE_ACTION =
-  "This instance of handleAction requires input of type: ";
+function isConfirmUserAttributeInput(
+  input: AttributeManagementInputs
+): input is ConfirmUserAttributeInput {
+  return (
+    typeof input === "object" &&
+    input !== null &&
+    "userAttributeKey" in input &&
+    "confirmationCode" in input
+  );
+}
+function isSendUserAttributeVerificationCodeInput(
+  input: AttributeManagementInputs
+): input is SendUserAttributeVerificationCodeInput {
+  return (
+    typeof input === "object" && input !== null && "userAttributeKey" in input
+  );
+}
+
+type ActionReturnTypes = {
+  delete:
+    | void
+    | undefined
+    | SendUserAttributeVerificationCodeOutput
+    | UpdateUserAttributesOutput;
+  confirm:
+    | void
+    | undefined
+    | SendUserAttributeVerificationCodeOutput
+    | UpdateUserAttributesOutput;
+  update:
+    | UpdateUserAttributesOutput
+    | undefined
+    | void
+    | SendUserAttributeVerificationCodeOutput;
+  sendVerificationCode:
+    | SendUserAttributeVerificationCodeOutput
+    | undefined
+    | void;
+  fetch:
+    | void
+    | undefined
+    | FetchUserAttributesOutput
+    | SendUserAttributeVerificationCodeOutput
+    | UpdateUserAttributesOutput;
+};
 
 const useUserAttributes = <T extends keyof Actions>(
-  type: T
+  action: T
 ): [
-  state: ActionState<Awaited<Actions[T]>>,
-  handleAction: (input: Parameters<Actions[T]>[0]) => void
+  state: ActionState<ActionReturnTypes[T]>,
+  handleAction: Inputs
 ] => {
-  // const [state, setState] = useDataState<Awaited<ReturnType<Actions[T]>>,Parameters<HandleActions[T]>[1]>(handleActions[type], {
-  //   data: {} as Awaited<ReturnType<Actions[T]>>,
-  //   isLoading: false,
-  //   message: undefined,
-  // });
+  const [deleteState, handleDelete] = useDataState(
+    deleteUserAttributesAction,
+    undefined
+  );
+  const [updateState, handleUpdate] = useDataState(
+    updateUserAttributesAction,
+    defaultUpdateUserAttributesOutput
+  );
+  const [confirmState, handleConfirm] = useDataState(
+    confirmUserAttributeAction,
+    undefined
+  );
+  const [sendVerificationCodeState, handleSendVerificationCode] = useDataState(
+    sendUserAttributeVerificationCodeAction,
+    defaultSendUserAttributeVerificationCodeOutput
+  );
+  const [fetchState, handleFetch] = useDataState(
+    fetchUserAttributesAction,
+    DefaultAttributes
+  );
 
-  const [state, setState] = useState<ActionState<Awaited<Actions[T]>>>({
-    data: {} as Awaited<ReturnType<Actions[T]>>,
-    isLoading: false,
-    message: undefined,
-  });
-
-  function isDeleteUserAttributesInput(
-    input: Parameters<Actions[T]>[0]
-  ): input is DeleteUserAttributesInput {
-    console.log("input to Delete: " + input);
-    console.log(input);
-    return typeof input === "object" && input !== null;
-  }
-  function isUpdateUserAttributesInput(
-    input: Parameters<Actions[T]>[0]
-  ): input is UpdateUserAttributesInput {
-    console.log("Input to Update: " + input);
-    console.log(input);
-    return (
-      typeof input === "object" && input !== null && "userAttributes" in input
-    );
-  }
-
-  function isConfirmUserAttributeInput(
-    input: Parameters<Actions[T]>[0]
-  ): input is ConfirmUserAttributeInput {
-    console.log("Input to Confirm: " + input);
-    console.log(input);
-    return (
-      typeof input === "object" &&
-      input !== null &&
-      "userAttributeKey" in input &&
-      "confirmationCode" in input
-    );
-  }
-  function isSendUserAttributeVerificationCodeInput(
-    input: Parameters<Actions[T]>[0]
-  ): input is SendUserAttributeVerificationCodeInput {
-    console.log("Input to Send Verification Code: " + input);
-    console.log(input);
-    return (
-      typeof input === "object" && input !== null && "userAttributeKey" in input
-    );
-  }
-
-  const handleAction = useCallback(
-    async (input: Parameters<Actions[T]>[0]) => {
-      try {
-        setState((prevState) => ({ ...prevState, isLoading: true }));
-
-        const data = await (() => {
-          switch (type) {
-            case "delete":
-              if (!isDeleteUserAttributesInput(input)) {
-                throw new Error(
-                  INVALID_INPUT_TO_HANDLE_ACTION + "DeleteUserAttributesInput"
-                );
-              }
-              return actions.delete(input);
-            case "update":
-              if (!isUpdateUserAttributesInput(input)) {
-                throw new Error(
-                  INVALID_INPUT_TO_HANDLE_ACTION + "UpdateUserAttributesInput"
-                );
-              }
-              return actions.update(input);
-            // Add similar type checks for other action types
-            case "confirm":
-              if (!isConfirmUserAttributeInput(input)) {
-                throw new Error(
-                  INVALID_INPUT_TO_HANDLE_ACTION + "ConfirmUserAttributeInput"
-                );
-              }
-              return actions.confirm(input);
-            case "sendVerificationCode":
-              if (!isSendUserAttributeVerificationCodeInput(input)) {
-                throw new Error(
-                  INVALID_INPUT_TO_HANDLE_ACTION +
-                    "SendUserAttributeVerificationCodeInput"
-                );
-              }
-              return actions.sendVerificationCode(input);
-            default:
-              throw new Error(`Unknown action type: ${type}`);
-          }
-        })();
-
-        console.log("State after API call: " + state);
-        console.log(state);
-
-        setState({ data: data, isLoading: false, message: undefined });
-
-        switch (type) {
-          case "delete": {
-            Hub.dispatch("ui", {
-              event: "attributesChanged",
-              data: data,
-              message: "attributes deleted successfully",
-            });
-            break;
-          }
-          case "update": {
-            Hub.dispatch("ui", {
-              event: "attributesChanged",
-              data: data,
-              message: "attributes updated successfully",
-            });
-            break;
-          }
-          case "confirm": {
-            Hub.dispatch("ui", {
-              event: "attributeVerified",
-              message: "attribute successfully verified",
-              data: data,
-            });
-            break;
-          }
-          case "sendVerificationCode": {
-            Hub.dispatch("ui", {
-              event: "confirmationCodeSent",
-              data: data,
-              message: "send code to verify attribute",
-            });
-            break;
-          }
+  const fetchHub: HubCallback = React.useCallback(
+    ({ payload }) => {
+      switch (payload.event) {
+        // success events
+        case "signedIn":
+        case "signUp":
+        case "autoSignIn":
+        case "tokenRefresh":
+        case "attributesChanged":
+        case "attributeVerified": {
+          handleFetch();
+          break;
         }
-      } catch (error) {
-        console.log(error);
-        setState((prevState) => ({
-          ...prevState,
-          isLoading: false,
-          message: (error as Error).message,
-        }));
+        case "signedOut":
+        case "tokenRefresh_failure":
+        case "signIn_failure":
+        case "autoSignIn_failure": {
+          throw new Error(payload.message);
+        }
+        default: {
+          break;
+        }
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [type]
+    [] // FIX THIS TOO
   );
-  return [state, handleAction];
+  // Hub subscriptions
+  React.useEffect(() => {
+    const unsubscribe = Hub.listen("auth", fetchHub);
+    handleFetch();
+    return unsubscribe;
+  }, [fetchHub, handleFetch]);
+
+  React.useEffect(() => {
+    const unsubscribe = Hub.listen("ui", fetchHub);
+    handleFetch();
+    return unsubscribe;
+  }, [fetchHub, handleFetch]);
+
+  switch (action) {
+    case "delete":
+      return [deleteState, handleDelete];
+    case "confirm":
+      return [confirmState, handleConfirm];
+    case "sendVerificationCode":
+      return [sendVerificationCodeState, handleSendVerificationCode];
+    case "update":
+      return [updateState, handleUpdate];
+    case "fetch":
+      return [fetchState, handleFetch];
+    default:
+      throw new Error(`Invalid action: ${action}`);
+  }
 };
 
-export { useUserAttributes };
+export { useUserAttributes, deleteUserAttributesAction };

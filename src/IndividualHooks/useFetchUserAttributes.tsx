@@ -2,7 +2,7 @@ import { HubCallback } from "@aws-amplify/core";
 import { fetchUserAttributes } from "aws-amplify/auth";
 import { Hub } from "aws-amplify/utils";
 import * as React from "react";
-import { DefaultAttributes, UserAttributes } from "./constants";
+import { DefaultAttributes, UserAttributes } from "../constants";
 
 interface FetchUserAttributesState {
   /**

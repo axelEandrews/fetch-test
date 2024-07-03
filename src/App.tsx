@@ -3,8 +3,7 @@ import type { Schema } from "../amplify/data/resource";
 import { generateClient } from "aws-amplify/data";
 import { Authenticator, Divider, Heading } from "@aws-amplify/ui-react";
 import "@aws-amplify/ui-react/styles.css";
-//import { TestApp } from "./FullTesterIndivHooks";
-import { TestAppThree } from "./FullTesterFetchAndFour";
+import { SimpleProfilePage } from "./SimpleTester";
 
 const client = generateClient<Schema>();
 
@@ -28,12 +27,11 @@ function App() {
         "phone_number",
       ]}
     >
-      {({ signOut, user }) => (
+      {({ signOut }) => (
         <main>
           <div>
             <Heading fontSize={60}>Welcome to Attribute Manager!!</Heading>
             <Heading paddingBottom="small">
-              <h2>{user?.signInDetails?.loginId}'s Attributes:</h2>
               <button onClick={signOut}>Sign Out</button>
             </Heading>
           </div>
@@ -44,7 +42,7 @@ function App() {
               borderBlockStyle: "groove",
             }}
           />
-          <TestAppThree />
+          <SimpleProfilePage />
         </main>
       )}
     </Authenticator>

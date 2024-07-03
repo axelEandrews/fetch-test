@@ -3,7 +3,7 @@ import { DeleteUserAttributesInput, UserAttributeKey } from "aws-amplify/auth";
 import { useDeleteUserAttributes } from "./useDeleteUserAttributes";
 
 export const DeleteTester = () => {
-  const [handleDelete] = useDeleteUserAttributes();
+  const [, handleDelete] = useDeleteUserAttributes();
   // Select with form
   const onSubmit = (event: { preventDefault: () => void }) => {
     event.preventDefault();
