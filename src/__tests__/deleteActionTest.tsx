@@ -48,7 +48,12 @@ describe("deleteUserAttributesAction", () => {
   });
 
   it("should throw an error for invalid input", async () => {
-    const invalidInput = { userAttributeKeys: "value" as unknown as [UserAttributeKey, ...UserAttributeKey[]] } as DeleteUserAttributesInput;
+    const invalidInput = {
+      userAttributeKeys: "value" as unknown as [
+        UserAttributeKey,
+        ...UserAttributeKey[]
+      ],
+    } as DeleteUserAttributesInput;
     await expect(
       deleteUserAttributesAction(undefined, invalidInput)
     ).rejects.toThrowError(

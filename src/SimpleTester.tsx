@@ -42,22 +42,11 @@ export const SimpleProfilePage = () => {
     });
   };
 
-  // const isFetchUserAttributesOutput = (
-  //   data:
-  //     | FetchUserAttributesOutput
-  //     | SendUserAttributeVerificationCodeOutput
-  //     | UpdateUserAttributesOutput
-  //     | void
-  //     | undefined
-  // ): data is FetchUserAttributesOutput => {
-  //   return (data as FetchUserAttributesOutput).userAttributes !== undefined;
-  // };
-
   const handleAttributeDelete = (key: UserAttributeKey) => {
     handleDelete({
       userAttributeKeys: [key],
     });
-    console.log(key + 'deleted')
+    console.log(key + "deleted");
     const input = formRef.current?.querySelector(
       `input[name="${key}"]`
     ) as HTMLInputElement;

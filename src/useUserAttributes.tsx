@@ -106,7 +106,7 @@ const updateUserAttributesAction = async (
         event: "attributesUpdateFailure",
         message: error as string,
       });
-      throw error; // Throw the error instead of returning undefined
+      throw error;
     }
   }
 };
@@ -187,9 +187,7 @@ const fetchUserAttributesAction = async (
 function isDeleteUserAttributesInput(
   input: AttributeManagementInputs
 ): input is DeleteUserAttributesInput {
-  return (
-    typeof input === "object" && input !== null
-  );
+  return typeof input === "object" && input !== null;
 }
 function isUpdateUserAttributesInput(
   input: AttributeManagementInputs
