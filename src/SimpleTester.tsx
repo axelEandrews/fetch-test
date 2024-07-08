@@ -33,20 +33,19 @@ export const SimpleProfilePage = () => {
 
   const handleEditClick = () => {
     setIsEditMode(true);
-    editableAttributes.forEach((key) => {
-      const input = document.createElement("input");
-      input.type = "text";
-      input.name = key;
-      input.value = fetchState.data[key] || "";
-      formRef.current?.appendChild(input);
-    });
+      editableAttributes.forEach((key) => {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = key;
+        input.value = fetchState.data[key] || "";
+        formRef.current?.appendChild(input);
+      });
   };
 
   const handleAttributeDelete = (key: UserAttributeKey) => {
     handleDelete({
       userAttributeKeys: [key],
     });
-    console.log(key + "deleted");
     const input = formRef.current?.querySelector(
       `input[name="${key}"]`
     ) as HTMLInputElement;
@@ -70,11 +69,11 @@ export const SimpleProfilePage = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const newAttributes = Object.fromEntries(formData.entries()) as Record<
+    const userAttributes = Object.fromEntries(formData.entries()) as Record<
       UserAttributeKey,
       string
     >;
-    handleUpdate({ userAttributes: newAttributes });
+    handleUpdate({ userAttributes });
   };
 
   const handleVerifySubmit = (e: React.FormEvent<HTMLFormElement>) => {
@@ -93,7 +92,7 @@ export const SimpleProfilePage = () => {
     handleFetch();
   }, []);
 
-  if (fetchState.isLoading) {
+  if (fetchState.isLoading && !fetchState.data) {
     return <div>Loading...</div>;
   }
 
@@ -137,7 +136,7 @@ export const SimpleProfilePage = () => {
                 </button>
               </div>
             ))}
-            <button type="submit">Save</button>
+            <button type="submit">Submit Updates</button>
             <button type="button" onClick={() => setIsEditMode(false)}>
               Done
             </button>

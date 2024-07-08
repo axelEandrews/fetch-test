@@ -45,12 +45,37 @@ interface ActionState<T> {
   message: string | undefined;
 }
 
-interface Actions {
-  confirm: typeof confirmUserAttributeAction;
-  delete: typeof deleteUserAttributesAction;
-  sendVerificationCode: typeof sendUserAttributeVerificationCodeAction;
-  update: typeof updateUserAttributesAction;
-  fetch: typeof fetchUserAttributesAction;
+
+interface HandlerInputs {
+  confirm: ConfirmUserAttributeInput;
+  delete: DeleteUserAttributesInput;
+  fetch: undefined; // no input for fetch
+  sendVerificationCode: SendUserAttributeVerificationCodeInput;
+  update: UpdateUserAttributesInput;
+}
+
+interface StateDataTypes {
+  confirm: undefined | void
+  delete: undefined | void
+  fetch: FetchUserAttributesOutput | undefined | void
+  sendVerificationCode: SendUserAttributeVerificationCodeOutput | undefined | void
+  update: UpdateUserAttributesOutput | undefined | void
+}
+
+// interface Actions {
+//   confirm: typeof confirmUserAttributeAction;
+//   delete: typeof deleteUserAttributesAction;
+//   sendVerificationCode: typeof sendUserAttributeVerificationCodeAction;
+//   update: typeof updateUserAttributesAction;
+//   fetch: typeof fetchUserAttributesAction;
+// }
+
+interface Actions { 
+  confirm: typeof confirmUserAttribute;
+  delete: typeof deleteUserAttributes;
+  sendVerificationCode: typeof sendUserAttributeVerificationCode;
+  update: typeof updateUserAttributes;
+  fetch: typeof fetchUserAttributes;
 }
 
 type AttributeManagementInputs =
@@ -72,7 +97,7 @@ const deleteUserAttributesAction = async (
     try {
       const result = await deleteUserAttributes(input);
       Hub.dispatch("ui", {
-        event: "attributesChanged",
+        event: "FETCH_ATTRIBUTES",
         message: "attributes deleted successfully",
       });
       return result;
@@ -97,7 +122,7 @@ const updateUserAttributesAction = async (
     try {
       const result = await updateUserAttributes(input);
       Hub.dispatch("ui", {
-        event: "attributesChanged",
+        event: "FETCH_ATTRIBUTES",
         message: "attributes updated successfully",
       });
       return result;
@@ -122,7 +147,7 @@ const confirmUserAttributeAction = async (
     try {
       const result = await confirmUserAttribute(input);
       Hub.dispatch("ui", {
-        event: "attributesChanged",
+        event: "FETCH_ATTRIBUTES",
         message: "attributes confirmed successfully",
       });
       return result;
@@ -147,7 +172,7 @@ const sendUserAttributeVerificationCodeAction = async (
     try {
       const result = await sendUserAttributeVerificationCode(input);
       Hub.dispatch("ui", {
-        event: "attributesChanged",
+        event: "FETCH_ATTRIBUTES",
         message: "attributes confirmed successfully",
       });
       return result;
@@ -170,7 +195,7 @@ const fetchUserAttributesAction = async (
   //         INVALID_INPUT_TO_HANDLE_ACTION + "FetchUserAttributesInput"
   //     );
   // } else {
-  console.log(input);
+  console.log(input); // to avoid unused vars
   try {
     const result = await fetchUserAttributes();
     return result;
@@ -215,53 +240,16 @@ function isSendUserAttributeVerificationCodeInput(
   );
 }
 
-// function isFetchUserAttributesInput(
-//   input: AttributeManagementInputs
-// ): input is null {
-//   return input === null;
-// }
 
-type ActionReturnTypes = {
-  delete:
-    | void
-    | undefined
-    | SendUserAttributeVerificationCodeOutput
-    | UpdateUserAttributesOutput;
-  confirm:
-    | void
-    | undefined
-    | SendUserAttributeVerificationCodeOutput
-    | UpdateUserAttributesOutput;
-  update:
-    | UpdateUserAttributesOutput
-    | undefined
-    | void
-    | SendUserAttributeVerificationCodeOutput;
-  sendVerificationCode:
-    | SendUserAttributeVerificationCodeOutput
-    | undefined
-    | void;
-  fetch:
-    | void
-    | undefined
-    | FetchUserAttributesOutput
-    | SendUserAttributeVerificationCodeOutput
-    | UpdateUserAttributesOutput;
-};
 
-type ActionInputTypes = {
-  delete: DeleteUserAttributesInput;
-  confirm: ConfirmUserAttributeInput;
-  sendVerificationCode: SendUserAttributeVerificationCodeInput;
-  update: UpdateUserAttributesInput;
-  fetch: null;
-};
+
+
 
 const useUserAttributes = <T extends keyof Actions>(
   action: T
 ): [
-  state: ActionState<ActionReturnTypes[T]>,
-  handleAction: (...input: ActionInputTypes[T][]) => void
+  state: ActionState<StateDataTypes[T]>,
+  handleAction: (...input: HandlerInputs[T][]) => void
 ] => {
   const [deleteState, handleDelete] = useDataState(
     deleteUserAttributesAction,
@@ -288,20 +276,9 @@ const useUserAttributes = <T extends keyof Actions>(
     ({ payload }) => {
       switch (payload.event) {
         // success events
-        case "signedIn":
-        case "signUp":
-        case "autoSignIn":
-        case "tokenRefresh":
-        case "attributesChanged":
-        case "attributeVerified": {
+        case "FETCH_ATTRIBUTES": {
           handleFetch();
           break;
-        }
-        case "signedOut":
-        case "tokenRefresh_failure":
-        case "signIn_failure":
-        case "autoSignIn_failure": {
-          throw new Error(payload.message);
         }
         default: {
           break;
@@ -312,11 +289,15 @@ const useUserAttributes = <T extends keyof Actions>(
     [] // FIX THIS TOO
   );
   // Hub subscriptions
-  React.useEffect(() => {
-    const unsubscribe = Hub.listen("auth", fetchHub);
-    handleFetch();
-    return unsubscribe;
-  }, [fetchHub, handleFetch]);
+  // Declare both subscriptions in same useEffect
+  // signOut 'auth', FETCH_ATTRIBUTES 'ui'
+
+  // I DON"T KNOW IF WE REALLY NEED TO LISTEN TO AUTH ON TOP OF UI, COULD JUST FOCUS ON OUR EVENTS
+  // React.useEffect(() => {
+  //   const unsubscribeAuth = Hub.listen("auth", fetchHub);
+  //   handleFetch();
+  //   return unsubscribeAuth;
+  // }, [fetchHub, handleFetch]);
 
   React.useEffect(() => {
     const unsubscribe = Hub.listen("ui", fetchHub);

@@ -16,7 +16,7 @@ export const auth = defineAuth({
     },
     phoneNumber: {
       mutable: true,
-      required: true,
+      required: false,
     },
     familyName: {
       mutable: true,
